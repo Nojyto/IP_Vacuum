@@ -19,17 +19,16 @@ public class Launcher extends Agent {
             //     {"P6", "com.ktu.agents.Provider", new Object[]{1, 1, 1}}
             // };
             // createAndStartAgents(container, configurations);
-
+            createAndStartAgents(container,  new Object[][]{{"Env", "com.ktu.agents.Environment", new Object[]{}}});
             createAndStartAgents(container,  new Object[][]{{"Rob", "com.ktu.agents.Robot", new Object[]{}}});
             createAndStartAgents(container,  new Object[][]{{"Sen", "com.ktu.agents.Sensor", new Object[]{}}});
             createAndStartAgents(container,  new Object[][]{{"Act", "com.ktu.agents.Actuator", new Object[]{}}});
-            createAndStartAgents(container,  new Object[][]{{"Env", "com.ktu.agents.Environment", new Object[]{}}});
             Thread.sleep(1000);
         } catch (InterruptedException | ControllerException e) {
             e.printStackTrace();
         }
 
-        doDelete();
+        //doDelete();
     }
 
     private void createAndStartAgents(AgentContainer container, Object[][] configurations) throws ControllerException {
