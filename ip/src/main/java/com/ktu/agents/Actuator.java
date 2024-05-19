@@ -2,6 +2,7 @@ package com.ktu.agents;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
@@ -11,81 +12,57 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-/*
- * POKYCIU KURIU REIKIA ATLIKTI:
- * Dabar actuator informuoja sensor agenta, kad jis atliko visus judesius, 
- * reiktu kad informuotu pati robota ir jis veliau informuotu sensoriu kad gali rinkti duomenis
- * Pagrinde tiesiog pakeisti executeMoveOrder metodo pabaigoje esanti koda
- * 
- * Padaryt kad gautu stringa is roboto ir pagal ta stringa judetu, 
- * kolkas tiesiog yra one shot behaviour kad pajuda 1 kart ir viskas, cia tsg testavimui
- * 
- * 
- */
-
-
 public class Actuator extends Agent {
     private AID environmentAgent;
-    private AID sensorAgent; // Add this to store the AID of the SensorAgent
-    private String moveOrder = ""; // The sequence of movements (e.g., "UP RIGHT DOWN LEFT")
-    private int moveIndex = 0; // Tracks the current position in the moveOrder string
+    private AID sensorAgent; 
+    private String[] moveOrder; 
+    private int moveIndex = 0; 
 
     @Override
     protected void setup() {
-        // Register with the DF
         registerWithDF();
+        environmentAgent = findAgent("environment-agent");
+        sensorAgent = findAgent("sensor-agent");
 
-        // Example move order, you can set this dynamically as needed
-        moveOrder = "UP RIGHT DOWN RIGHT ";
-
-        addBehaviour(new OneShotBehaviour() {
+        addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
-                if (environmentAgent == null) {
-                    // Look up the Environment Agent
-                    environmentAgent = findAgent("environment-agent");
-                }
-                if (sensorAgent == null) {
-                    // Look up the Sensor Agent
-                    sensorAgent = findAgent("sensor-agent");
-                }
-                if (environmentAgent != null && sensorAgent != null) {
+                MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+                ACLMessage msg = receive(mt);
+                if (msg != null) {
+                    moveOrder = msg.getContent().split(" ");
+                    moveIndex = 0;
                     executeMoveOrder();
+                } else {
+                    block();
                 }
             }
         });
     }
 
     private void executeMoveOrder() {
-        String[] moves = moveOrder.split(" ");
-        if (moveIndex < moves.length) {
-            String move = moves[moveIndex];
+        if (moveIndex < moveOrder.length) {
+            String move = moveOrder[moveIndex];
             moveIndex++;
 
             ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
             request.addReceiver(environmentAgent);
             request.setContent(move);
-            System.out.println("Sending move: " + move);
             send(request);
 
             addBehaviour(new WakerBehaviour(this, 500) {
                 @Override
                 protected void onWake() {
-                    // Check for the response from EnvironmentAgent
-                    MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-                    ACLMessage reply = receive(mt);
-                    if (reply != null) {
-                        // Successfully moved, execute next move
-                        executeMoveOrder();
-                    } else {
-                        // If no reply, re-attempt to move
-                        moveIndex--;
-                        executeMoveOrder();
-                    }
+                    executeMoveOrder();
                 }
             });
         } else {
-            // Notify the SensorAgent after all moves are complete
+            notifySensor();
+        }
+    }
+
+    private void notifySensor() {
+        if (sensorAgent != null) {
             ACLMessage notifySensor = new ACLMessage(ACLMessage.INFORM);
             notifySensor.addReceiver(sensorAgent);
             notifySensor.setContent("MOVE_COMPLETE");
