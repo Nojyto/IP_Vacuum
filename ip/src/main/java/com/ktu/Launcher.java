@@ -20,10 +20,10 @@ public class Launcher extends Agent {
             // };
             // createAndStartAgents(container, configurations);
 
-            createAndStartAgents(container,  new Object[][]{{"R1", "com.ktu.agents.Robot", new Object[]{}}});
-            createAndStartAgents(container,  new Object[][]{{"S1", "com.ktu.agents.Sensor", new Object[]{}}});
-            createAndStartAgents(container,  new Object[][]{{"A1", "com.ktu.agents.Actuator", new Object[]{}}});
-            createAndStartAgents(container,  new Object[][]{{"E1", "com.ktu.agents.Environment", new Object[]{}}});
+            createAndStartAgents(container,  new Object[][]{{"Rob", "com.ktu.agents.Robot", new Object[]{}}});
+            createAndStartAgents(container,  new Object[][]{{"Sen", "com.ktu.agents.Sensor", new Object[]{}}});
+            createAndStartAgents(container,  new Object[][]{{"Act", "com.ktu.agents.Actuator", new Object[]{}}});
+            createAndStartAgents(container,  new Object[][]{{"Env", "com.ktu.agents.Environment", new Object[]{}}});
             Thread.sleep(1000);
         } catch (InterruptedException | ControllerException e) {
             e.printStackTrace();
